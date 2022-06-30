@@ -10,6 +10,7 @@ COPY ./yarn.lock ./
 RUN yarn
 
 COPY . .
+RUN chmod u+x ./wait-util/wait
 
 EXPOSE 3000
 

@@ -379,15 +379,6 @@ const models: TsoaRoute.Models = {
         "additionalProperties": false,
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "Playlist": {
-        "dataType": "refObject",
-        "properties": {
-            "PlaylistId": {"ref":"IntId","required":true},
-            "Name": {"dataType":"string"},
-        },
-        "additionalProperties": false,
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "PlaylistResourceAlbum": {
         "dataType": "refObject",
         "properties": {
@@ -1534,6 +1525,32 @@ export function RegisterRoutes(app: express.Router) {
 
 
               const promise = controller.insertPlaylistTrack.apply(controller, validatedArgs as any);
+              promiseHandler(controller, promise, response, undefined, next);
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        app.delete('/Playlist/:PlaylistId/Track/:TrackId',
+            ...(fetchMiddlewares<RequestHandler>(PlaylistController)),
+            ...(fetchMiddlewares<RequestHandler>(PlaylistController.prototype.deletePlaylistTrack)),
+
+            function PlaylistController_deletePlaylistTrack(request: any, response: any, next: any) {
+            const args = {
+                    PlaylistId: {"in":"path","name":"PlaylistId","required":true,"ref":"IntId"},
+                    TrackId: {"in":"path","name":"TrackId","required":true,"ref":"IntId"},
+            };
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = getValidatedArgs(args, request, response);
+
+                const controller = new PlaylistController();
+
+
+              const promise = controller.deletePlaylistTrack.apply(controller, validatedArgs as any);
               promiseHandler(controller, promise, response, undefined, next);
             } catch (err) {
                 return next(err);

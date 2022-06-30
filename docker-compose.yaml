@@ -43,12 +43,13 @@ services:
   graphql-engine:
     container_name: graphql-engine
     # using an unreleased branch using kriti lang v0.3.2.1. Enables optional variable lookup in string templates
-    image: hasura/graphql-engine:mono-pr-4908
+    image: hasura/graphql-engine:mono-pr-4908.cli-migrations-v3
     # custom entrypoint to ensure we wait for dependencies to be ready before starting
     # should automatically work with all versions (including cli-migrations and pro images)
     # uses https://github.com/ufoscout/docker-compose-wait
     entrypoint: |
       sh -c "
+        chmod u+x /wait-util/wait &&
         /wait-util/wait &&
         if [ -e /bin/graphql-engine-pro ]
         then

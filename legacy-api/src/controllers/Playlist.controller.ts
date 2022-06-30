@@ -80,7 +80,7 @@ export class PlaylistController extends Controller {
   public async getPlaylists(
     @Query() limit = 20,
     @Query() offset = 0
-  ): Promise<Playlist[]> {
+  ): Promise<PlaylistResource[]> {
     return db('Playlist')
       .select(
         '*',
@@ -587,89 +587,89 @@ export class PlaylistController extends Controller {
 
     return playlist;
   }
-  // /**
-  //  * Update the resource using the resource id. Returns the updated resource.
-  //  * @param PlaylistId resource id
-  //  * @param requestBody Request Body
-  //  */
-  // @Delete('{PlaylistId}/Track/{TrackId}')
-  // public async deletePlaylistTrack(
-  //   @Path() PlaylistId: IntId,
-  //   @Body() requestBody: PlaylistTrackInsertInput
-  // ): Promise<PlaylistResource> {
-  //   const [playlist] = await db
-  //     .with(
-  //       'playlist',
-  //       db('PlaylistTrack')..delete('*')
-  //     )
-  //     .select(
-  //       '*',
-  //       db
-  //         .select(arrAggregate('PlaylistTrackAggregate'))
-  //         .from(
-  //           db('PlaylistTrack')
-  //             .select(
-  //               '*',
-  //               db
-  //                 .select(objAggregate('TrackAggregate'))
-  //                 .from(
-  //                   db('Track')
-  //                     .first(
-  //                       '*',
-  //                       db
-  //                         .select(objAggregate('GenreAggregate'))
-  //                         .from(
-  //                           db('Genre')
-  //                             .first()
-  //                             .whereRaw(`"GenreId" = "Track"."GenreId"`)
-  //                             .as('GenreAggregate')
-  //                         )
-  //                         .as('Genre'),
-  //                       db
-  //                         .select(objAggregate('MediaTypeAggregate'))
-  //                         .from(
-  //                           db('MediaType')
-  //                             .first()
-  //                             .whereRaw(`"MediaTypeId" = "Track"."MediaTypeId"`)
-  //                             .as('MediaTypeAggregate')
-  //                         )
-  //                         .as('MediaType'),
-  //                       db
-  //                         .select(objAggregate('AlbumAggregate'))
-  //                         .from(
-  //                           db('Album')
-  //                             .first(
-  //                               '*',
-  //                               db
-  //                                 .select(objAggregate('ArtistAggregate'))
-  //                                 .from(
-  //                                   db('Artist')
-  //                                     .first()
-  //                                     .whereRaw(
-  //                                       `"ArtistId" = "Album"."ArtistId"`
-  //                                     )
-  //                                     .as('ArtistAggregate')
-  //                                 )
-  //                                 .as('Artist')
-  //                             )
-  //                             .whereRaw(`"AlbumId" = "Track"."AlbumId"`)
-  //                             .as('AlbumAggregate')
-  //                         )
-  //                         .as('Album')
-  //                     )
-  //                     .whereRaw('"TrackId" = "PlaylistTrack"."TrackId"')
-  //                     .as('TrackAggregate')
-  //                 )
-  //                 .as('Track')
-  //             )
-  //             .whereRaw(`"PlaylistId" = "Playlist"."PlaylistId"`)
-  //             .as('PlaylistTrackAggregate')
-  //         )
-  //         .as('PlaylistTracks')
-  //     )
-  //     .from('Playlist')
-  //     .where({ PlaylistId });
+  /**
+   * Update the resource using the resource id. Returns the updated resource.
+   * @param PlaylistId resource id
+   * @param requestBody Request Body
+   */
+  @Delete('{PlaylistId}/Track/{TrackId}')
+  public async deletePlaylistTrack(
+    @Path() PlaylistId: IntId,
+    @Path() TrackId: IntId
+  ): Promise<PlaylistResource> {
+    const [playlist] = await db
+      .with(
+        'playlist',
+        db('PlaylistTrack').delete('*').where({ PlaylistId, TrackId })
+      )
+      .select(
+        '*',
+        db
+          .select(arrAggregate('PlaylistTrackAggregate'))
+          .from(
+            db('PlaylistTrack')
+              .select(
+                '*',
+                db
+                  .select(objAggregate('TrackAggregate'))
+                  .from(
+                    db('Track')
+                      .first(
+                        '*',
+                        db
+                          .select(objAggregate('GenreAggregate'))
+                          .from(
+                            db('Genre')
+                              .first()
+                              .whereRaw(`"GenreId" = "Track"."GenreId"`)
+                              .as('GenreAggregate')
+                          )
+                          .as('Genre'),
+                        db
+                          .select(objAggregate('MediaTypeAggregate'))
+                          .from(
+                            db('MediaType')
+                              .first()
+                              .whereRaw(`"MediaTypeId" = "Track"."MediaTypeId"`)
+                              .as('MediaTypeAggregate')
+                          )
+                          .as('MediaType'),
+                        db
+                          .select(objAggregate('AlbumAggregate'))
+                          .from(
+                            db('Album')
+                              .first(
+                                '*',
+                                db
+                                  .select(objAggregate('ArtistAggregate'))
+                                  .from(
+                                    db('Artist')
+                                      .first()
+                                      .whereRaw(
+                                        `"ArtistId" = "Album"."ArtistId"`
+                                      )
+                                      .as('ArtistAggregate')
+                                  )
+                                  .as('Artist')
+                              )
+                              .whereRaw(`"AlbumId" = "Track"."AlbumId"`)
+                              .as('AlbumAggregate')
+                          )
+                          .as('Album')
+                      )
+                      .whereRaw('"TrackId" = "PlaylistTrack"."TrackId"')
+                      .as('TrackAggregate')
+                  )
+                  .as('Track')
+              )
+              .whereRaw(`"PlaylistId" = "Playlist"."PlaylistId"`)
+              .as('PlaylistTrackAggregate')
+          )
+          .as('PlaylistTracks')
+      )
+      .from('Playlist')
+      .where({ PlaylistId });
 
-  //   return playlist;
-  // }
+    return playlist;
+  }
 }
