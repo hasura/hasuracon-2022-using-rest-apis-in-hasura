@@ -1,0 +1,8 @@
+# note: all these values are default values, so they could be ommited. Including them here for visibility.
+# documentation for this config can be found at https://hasura.io/docs/latest/graphql/core/hasura-cli/config-reference.html
+version: 3
+endpoint: http://localhost:8080
+admin_secret: secret
+metadata_directory: graphql-engine/metadata
+migrations_directory: graphql-engine/migrations
+seeds_directory: graphql-engine/seeds

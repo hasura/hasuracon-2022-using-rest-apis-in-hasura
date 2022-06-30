@@ -1,0 +1,98 @@
+version: "3.8"
+services:
+  postgres:
+    container_name: postgres
+    image: postgres:14
+    expose:
+      - 5432
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./postgres/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_USER: ${POSTGRES_USERNAME:-postgres}
+  pgadmin:
+    container_name: pgadmin
+    image: dpage/pgadmin4:latest
+    depends_on:
+      - postgres
+    ports:
+      - 5050:80
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_USERNAME:-admin@pgadmin.dev}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin}
+  legacy-api:
+    container_name: legacy-api
+    command: yarn dev
+    image: legacy-api
+    build:
+      context: ./legacy-api
+      args:
+        NODE_ENV: development
+    ports:
+      - "3000:3000"
+    depends_on:
+      - postgres
+    volumes:
+      - ./legacy-api/src:/usr/app/src
+    environment:
+      WAIT_HOSTS: postgres:5432
+      WAIT_TIMEOUT: 300
+      NODE_ENV: development
+      MAIN_DATABASE_URL: postgres://${POSTGRES_USERNAME:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/main
+  graphql-engine:
+    container_name: graphql-engine
+    # using an unreleased branch using kriti lang v0.3.2.1. Enables optional variable lookup in string templates
+    image: hasura/graphql-engine:mono-pr-4908
+    # custom entrypoint to ensure we wait for dependencies to be ready before starting
+    # should automatically work with all versions (including cli-migrations and pro images)
+    # uses https://github.com/ufoscout/docker-compose-wait
+    entrypoint: |
+      sh -c "
+        /wait-util/wait &&
+        if [ -e /bin/graphql-engine-pro ]
+        then
+          if [ -e /bin/docker-entrypoint.sh ]
+          then exec /bin/docker-entrypoint.sh graphql-engine-pro serve
+          else exec graphql-engine-pro serve
+          fi
+        else
+          if [ -e /bin/docker-entrypoint.sh ]
+          then exec /bin/docker-entrypoint.sh graphql-engine serve
+          else exec graphql-engine serve
+          fi
+        fi
+      "
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+      - legacy-api
+    volumes:
+      - ./graphql-engine/migrations:/hasura-migrations
+      - ./graphql-engine/metadata:/hasura-metadata
+      # mount the wait executable so we don't have to build a custom image
+      - ./graphql-engine/wait-util:/wait-util
+    environment:
+      # wait for these hosts and ports to be ready before starting
+      WAIT_HOSTS: postgres:5432, legacy-api:3000
+      WAIT_TIMEOUT: 300
+      # various environment variables used for hasura configuration
+      # docs: https://hasura.io/docs/latest/graphql/core/deployment/graphql-engine-flags/reference.html#server-flag-reference
+      # the postgres database where hasura metadata will be stored
+      HASURA_GRAPHQL_METADATA_DATABASE_URL: postgres://${POSTGRES_USERNAME:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/hasura_metadata
+      # you can use this environment variable to connect hasura to the main database
+      MAIN_DATABASE_URL: postgres://${POSTGRES_USERNAME:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/main
+      # enable the console served by server
+      HASURA_GRAPHQL_ENABLE_CONSOLE: "true" # set to "false" to disable console
+      # enable debugging mode. It is recommended to disable this in production
+      HASURA_GRAPHQL_DEV_MODE: "true"
+      HASURA_GRAPHQL_ENABLED_LOG_TYPES: startup, http-log, webhook-log, websocket-log, query-log
+      # uncomment next line to set an admin secret
+      HASURA_GRAPHQL_ADMIN_SECRET: ${HASURA_GRAPHQL_ADMIN_SECRET:-secret}
+      # base url for legacy api
+      LEGACY_API_BASE_URL: http://legacy-api:3000
+# volumes are used to persist state that would otherwise be lost when a container is restarted or shut down
+volumes:
+  postgres-data:
+    name: postgres-data
